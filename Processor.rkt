@@ -3,18 +3,13 @@
 
 ;(var-exp a)
 ;(processor (var-exp a)) -> (resolve a variable_env) -> 1
-(define process_var_exp
-  (lambda
-      (parsedCode env)
-    (resolve_env (cadr parsedCode) env)
-    )
-  )
+(define (process_var_exp parsedCode env)
+  (resolve_env (cadr parsedCode) env))
 
 ;(num-exp 1) -> 1
 (define (process_num_exp parsedCode env)
   (let ((num-value (cadr parsedCode)))
-    num-value)
-  )
+    num-value))
 
 
 ;(processor (app-exp (func-exp (list-exp (var-exp x) (var-exp y)) (var-exp x))
@@ -25,16 +20,13 @@
 (define process_app_exp
   (lambda
       (parsedCode env)
-    (let* ((func-exp (cadr (cadr parsedCode)))
-           (args (caddr parsedCode))
-           (params (car func-exp))
-           (body (cadr func-exp))
+    (let (
            (local_env
-            (push_vars_to_env
-             (map cadr params)
-             (map (lambda (val-exp) (processor val-exp env)) args)
+                      (push_vars_to_env
+           (map (lambda (arg) (cadr arg)) (cdr (car (cadr (cadr parsedCode)))))
+           (map (lambda (val-exp) (processor val-exp env)) (cdr (caddr parsedCode)))
              env)))
-      (processor body local_env)
+      (processor (caddr (cadr parsedCode)) local_env)
       )
     )
   )
@@ -68,15 +60,10 @@
    )
   )
 
-(define process_ask_exp
-  (lambda
-   (parsedCode env)
-   (if
-    (processor (cadr parsedCode) env)
-    (processor (caddr parsedCode) env)
-    (processor (cadddr parsedCode) env))
-   )
-  )
+(define (process_ask_exp parsedCode env)
+  (if (processor (cadr parsedCode) env)
+      (processor (caddr parsedCode) env)
+      (processor (cadddr parsedCode) env)))
 
 ;process math ('+ '- '* '/ '// '%)
 (define process_math_exp
