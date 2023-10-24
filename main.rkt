@@ -6,10 +6,12 @@
 (define var_env
   '(;environment
    (;global variable scope
-    (a 1) (b 2) (c 3)
+    (a 1) (b 3) (c 5)
     )
    )
   )
 
 
-(processor (parser '(call (function(x)(ask (== a 1) (+ x 1) (- x 1))) (2))) var_env)
+
+(parser '(call (function (x y) (* x y)) (5 3)))
+(processor (parser '(call (function (x y) (* x y)) (b c))) var_env)

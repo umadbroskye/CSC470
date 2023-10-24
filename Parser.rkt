@@ -73,6 +73,21 @@
               (parser item)
               ) statement))
        );this is a list expression
+      ((and
+        (list? statement)
+        (eq? 'let (car statement))
+        (eq? (length statement) 3))
+       (let ((bindings (cadr statement))
+             (body (caddr statement)))
+         (list 'let-exp
+               (list 'list-exp
+                     (map (lambda (pair)
+                            (list 'var-exp (car pair))
+                            (list 'num-exp (cadr pair)))
+                          bindings))
+               (parser body)))
+       )
+      ;this is let expression to add new local variables
       (else
        (print "Parsing failed. Unknown statement."))
       )

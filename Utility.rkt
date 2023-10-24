@@ -57,6 +57,17 @@
   )
     
 
+(define (add-vars-to-top-scope list-var list-val env)
+  (cons (append (pair-helper list-var list-val) (car env))
+        (cdr env)))
+
+(define (pair-helper list-var list-val)
+  (cond
+    ((null? list-var) '())
+    (else (cons (list (car list-var) (car list-val))
+                (pair-helper (cdr list-var) (cdr list-val))))))
+
+
 (define is_in_list
   (lambda (lst item)
     (cond
