@@ -84,6 +84,19 @@
       [else (println "Error: illegal math expression")])))
 
 
+(define process_let_exp
+  (lambda (parsedCode env)
+    (let*
+        (
+         (v_list
+          (map (lambda (pair) (list (cadr (car pair)) (processor (cadr pair) env)))
+               (cdr (cadr parsedCode))))
+        (let_loc (cons (append v_list (car env)) (cdr env))))
+    (processor (caddr parsedCode) let_loc)
+    )
+  )
+)
+
 
 (define processor
   (lambda
@@ -109,6 +122,8 @@
       ;when parsed code is a math expression
       ((eq? 'math-exp (car parsedCode))
        (process_math_exp parsedCode env))
+      ((eq? 'let-exp (car parsedCode))
+       (process_let_exp parsedCode env))
       ;....
       ;otherwise
       (else #f)

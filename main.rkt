@@ -11,7 +11,5 @@
    )
   )
 
-
-
-(parser '(call (function (x y) (* x y)) (5 3)))
-(processor (parser '(call (function (x y) (* x y)) (b c))) var_env)
+(processor (parser '(call (function(x)(let ((a 3) (b 4)) (+ a (+ x b))))(5))) var_env)
+; should return 12
