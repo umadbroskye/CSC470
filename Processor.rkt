@@ -20,12 +20,13 @@
 (define process_app_exp
   (lambda
       (parsedCode env)
-    (let (
+    (let* (
+           (glob_env (only_glob_scope env))
            (local_env
                       (push_vars_to_env
            (map (lambda (arg) (cadr arg)) (cdr (car (cadr (cadr parsedCode)))))
            (map (lambda (val-exp) (processor val-exp env)) (cdr (caddr parsedCode)))
-             env)))
+             glob_env)))
       (processor (caddr (cadr parsedCode)) local_env)
       )
     )

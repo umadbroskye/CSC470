@@ -78,4 +78,13 @@
     )
   )
 
+
+(define (only_glob_scope env)
+  (if (null? env)
+      (print "err")
+      (if (= 1 (length env))
+          env
+          (only_glob_scope (cdr env)))))
+
+
 (provide (all-defined-out))
