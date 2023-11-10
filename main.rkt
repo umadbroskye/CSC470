@@ -11,5 +11,10 @@
    )
   )
 
-(processor (parser '(call (function (a) (call (function (r) a ) (a))) (5))) var_env)
-; should return 1
+
+(define code '(while (< a 4) ((assign a (+ a 1)) (out a))))
+
+(define parsed (parser code))
+parsed
+
+(processor parsed var_env)

@@ -99,6 +99,114 @@
 )
 
 
+(define process_assign_exp
+  (lambda (parsedCode env)
+    (let* ((varname (cadr (car (car (cdr parsedCode)))))
+           (value (processor (cadr (car (cdr parsedCode))) env))
+           (updated_env (update_variable_in_env varname value env)))
+      (if (eq? updated_env env)
+          (letrec ((loop
+                    (lambda (env)
+                      (if (eq? env '())
+                          #f
+                          (let* ((scope (car env))
+                                 (updated_scope (update_variable_in_scope varname value scope)))
+                            (if (eq? updated_scope scope)
+                                (loop (cdr env))
+                                (cons updated_scope (cdr env))))))))
+            (loop env))
+          updated_env))))
+
+
+(define process_while_exp
+  (lambda (parsedCode env)
+    (let* ((condition (processor (cadr parsedCode) env))
+           (true_body_exp (append (cdr (caddr parsedCode)) (list parsedCode))))
+      (if condition
+          (begin
+            (processor_while_exp_body true_body_exp env)
+            (process_while_exp parsedCode env)) ; Recursive call to process_while_exp
+          (println "while-loop stop here"))))) ; Print termination message
+
+(define processor_while_exp_body
+  (lambda (body env)
+    (cond
+      ((null? body) '())
+      ((eq? 'assign-exp (car (car body)))
+       (processor_while_exp_body (cdr body) (process_assign_exp (car body) env)))
+      (else (cons (processor (car body) env) (processor_while_exp_body (cdr body) env)))
+      )
+    )
+  )
+
+
+
+;(((a 1) (b 2) (c 3)) ((x 10) (y 5) (z 7)) ((m 6) (o 8)))
+;->((a b c) (x y z) (m o))
+;->(a b c x y z m o)
+(define extract_varname_from_env
+  (lambda (env)
+    (map (lambda (scope)
+           (map (lambda (pair)
+                  (car pair)) scope)
+           ) env
+         )
+    )
+  )
+
+;((a b c) (d e) (o m)) -> (m o e d a b c)
+(define combine
+  (lambda (lst_of_lst)
+    (cond
+     ((null? lst_of_lst) '())
+     ((eq? (length lst_of_lst) 1) (car lst_of_lst))
+     ;check if the second item is empty, if not, move the first item of the second list to first list
+     ;otherwise remove the second list when it is an empty list
+     ((null? (cadr lst_of_lst)) (combine (cons (car lst_of_lst) (cddr lst_of_lst))))
+     (else
+      (combine
+       (cons (cons (car (cadr lst_of_lst)) (car lst_of_lst)) (cons (cdr (cadr lst_of_lst)) (cddr lst_of_lst)))
+       )
+      )
+     )
+    )
+  )
+
+;((a 1) (b 2) (c 3))
+;(update_variable_in_scope a 5) -> ((a 5) (b 2) (c 3))
+(define update_variable_in_scope
+  (lambda (varname value scope)
+    (cond
+      ((null? scope) '())
+      ((eq? (car (car scope)) varname) (cons (list varname value) (cdr scope)))
+      (else (cons (car scope) (update_variable_in_scope varname value (cdr scope))))
+     )
+    )
+  )
+
+;check the first scope if the scope contains the varname, if yes, update scope, if not check next scope
+(define update_variable_in_env
+  (lambda (varname value env)
+    (map
+     (lambda (scope)
+       (map
+        (lambda (var-val-pair)
+          (if (eq? varname (car var-val-pair))
+              (list varname value)
+              var-val-pair))
+        scope))
+     env)))
+
+
+(define is_var_in_scope
+  (lambda (varname scope)
+    (is_in_list (map (lambda (pair)
+           (eq? (car pair) varname)) scope)
+                true);(true false false .....)
+    )
+  )
+
+
 (define processor
   (lambda
       (parsedCode env)
@@ -125,6 +233,19 @@
        (process_math_exp parsedCode env))
       ((eq? 'let-exp (car parsedCode))
        (process_let_exp parsedCode env))
+            ;when parsed code is an assignment expression
+      ((eq? 'assign-exp (car parsedCode))
+       (process_assign_exp parsedCode env))
+      ; when parsed code is a while expression
+      ((eq? 'while-exp (car parsedCode))
+       (process_while_exp parsedCode env))
+      ;when parsed code is an output expression
+      ((eq? 'output-exp (car parsedCode))
+              (displayln (string-append "***output***: "(number->string (processor (cadr parsedCode) env)))))
+      ;when parsed code is a block expression
+      ((eq? 'block-exp (car parsedCode))
+       (pick_first_non_void_from_list
+        (map (lambda (code) (processor code env)) (cdr parsedCode))))
       ;....
       ;otherwise
       (else #f)

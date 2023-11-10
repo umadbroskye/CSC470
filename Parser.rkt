@@ -54,7 +54,7 @@
        (if
         (eq? (length (cadr (cadr statement))) (length (caddr statement)))
         (list 'app-exp (parser (cadr statement)) (parser (caddr statement)))
-        (print "Error: argument list mismatches.")
+        (error-output "Error: argument list mismatches.")
        )
        );this is an app epxression
        ((and
@@ -74,6 +74,17 @@
              (parser (caddr statement)))
        )
        )
+             ((and
+        (pair? statement)
+        (eq? 'assign (car statement))
+        (eq? (length statement) 3))
+       (list
+        'assign-exp
+        (list
+         (parser (cadr statement))
+         (parser (caddr statement)))
+        )
+       );this is assign expression to update/create one variable
       ((and
         (list? statement)
         (eq? 'ask (car statement))
@@ -85,6 +96,32 @@
          (parser (cadddr statement))
          )
         );this is an ask expression
+            ((and
+        (pair? statement)
+        (eq? 'out (car statement))
+        (eq? (length statement) 2)
+        )
+       (list 'output-exp (parser (cadr statement))));this is an output expression
+                  ((and
+        (pair? statement)
+        (eq? 'when (car statement))
+        (eq? (length statement) 3))
+       (cons
+        'when-exp
+        (map (lambda (item) (parser item)) (cdr statement)))
+       );this is our when expression (while)
+                  ((and
+  (pair? statement)
+  (eq? 'while (car statement))
+  (eq? (length statement) 3))
+  (list 'while-exp (parser (cadr statement)) (parser (caddr statement))))
+      ((and
+        (pair? statement)
+        (eq? 'block (car statement))
+        (> (length statement) 1))
+       (cons 'block-exp
+             (map (lambda(item)(parser item)) (cdr statement))));this is a block expression contains multiple statements in the list
+      
       ((list? statement) ;(x 1 z ...) -> (list-exp (var-exp x) (num-exp 1) (var-exp z) ...)
        (cons 'list-exp (map (lambda(item)
               (parser item)
@@ -93,7 +130,7 @@
 
       ;this is let expression to add new local variables
       (else
-       (print "Parsing failed. Unknown statement."))
+       (error-output "Parsing failed. Unknown statement."))
       )
     )
   )
