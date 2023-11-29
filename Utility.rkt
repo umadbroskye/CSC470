@@ -86,6 +86,13 @@
           env
           (only_glob_scope (cdr env)))))
 
+
+(define display-output
+  (lambda (output)
+    (displayln (string-append "***Display***: " output))
+    )
+  )
+
 (define error-output
   (lambda (output)
     (displayln (string-append "***Error***: " output))

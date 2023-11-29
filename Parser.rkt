@@ -110,10 +110,23 @@
         'when-exp
         (map (lambda (item) (parser item)) (cdr statement)))
        );this is our when expression (while)
+                        ((and
+        (pair? statement)
+        (eq? 'each (car statement))
+        (eq? (length statement) 5))
+       (list 'each-exp
+                          (list 'assign-exp (list (parser (car (cadr statement))) (parser (cadr (cadr statement)))))
+             (list 'each-body-exp
+                   (parser (caddr statement))
+                   (list 'assign-exp (list (parser (car (cadddr statement))) (parser (cadr (cadddr statement)))))
+                   (cons 'each-list-exp (map (lambda (item) (parser item)) (cadr (cdddr statement))))
+                   )
+             )
+       );this is our each expression (for-loop)
                   ((and
   (pair? statement)
   (eq? 'while (car statement))
-  (eq? (length statement) 3))
+  (eq? (length statement) 5))
   (list 'while-exp (parser (cadr statement)) (parser (caddr statement))))
       ((and
         (pair? statement)
@@ -127,6 +140,7 @@
               (parser item)
               ) statement))
        );this is a list expression
+      
 
       ;this is let expression to add new local variables
       (else
